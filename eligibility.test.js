@@ -1,0 +1,10 @@
+const t = require('node:test'), a = require('node:assert'), s = require('../services/eligibility');
+const st = { branch: 'CSE', cgpa: 7.5, backlogs: 0, grad_year: 2027 };
+const d = { eligible_branches: 'CSE,IT', min_cgpa: 7, max_backlogs: 0, grad_year: 2027, status: 'open', deadline: '2999-01-01' };
+t('eligible student', () => a.ok(s.checkEligibility(st, d).eligible));
+t('low cgpa explained', () => { const r = s.checkEligibility({ ...st, cgpa: 6 }, d); a.ok(!r.eligible); a.match(r.failed[0], /CGPA/); });
+t('wrong branch', () => a.ok(!s.checkEligibility({ ...st, branch: 'ECE' }, d).eligible));
+t('expired drive', () => a.ok(!s.checkEligibility(st, { ...d, deadline: '2000-01-01' }).eligible));
+t('skill gap', () => { const g = s.skillGap(['SQL', 'excel'], ['SQL', 'Excel', 'Power BI', 'Python']); a.equal(g.percent, 50); a.deepEqual(g.missing, ['Power BI', 'Python']); });
+t('match score full', () => a.equal(s.matchScore(st, d, ['sql'], ['SQL']).score, 100));
+t('csv injection', () => a.equal(s.csvSafe('=cmd'), "'=cmd"));
